@@ -4,6 +4,17 @@
 #include "Arduino.h"
 #include <SPI.h>
 
+// SD Card Speed
+#ifndef SD_SPEED
+#define SD_SPEED 20000000
+#endif
+
+// SD Card SS Pin
+// TODO: Check for correct MCU pin
+#ifndef SD_SS_PIN
+#define SD_SS_PIN 10
+#endif
+
 // SD Commands Definition
 #define CMD0 0x40
 #define CMD1 0x41

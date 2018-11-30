@@ -1,17 +1,14 @@
 #include "SDCore.h"
 
 // TODO:
-// -> Write everything as static methods
 // -> Add full static CRC definition
 // -> Return a array with result
-// -> Send a array with parameters
-// -> Create a define with pin number and SD speed
 
 bool SDCore::begin() {
     // Setup SPI
     SPI.begin();
-    pinMode(pin, OUTPUT);
-    digitalWrite(pin, HIGH);
+    pinMode(SD_SS_PIN, OUTPUT);
+    digitalWrite(SD_SS_PIN, HIGH);
 
     // Wait for SD stabilization
     SPI.beginTransaction(SPISettings(
@@ -75,7 +72,7 @@ bool SDCore::begin() {
 byte SDCore::command(byte command, unsigned long param, byte crc) {
     byte r = 0xFF;
 
-    digitalWrite(pin, LOW);
+    digitalWrite(SD_SS_PIN, LOW);
     SPI.beginTransaction(SPISettings(
         350000,
         MSBFIRST,
@@ -91,7 +88,6 @@ byte SDCore::command(byte command, unsigned long param, byte crc) {
     SPI.transfer(command);
     SPI.transfer16(param >> 16);
     SPI.transfer16(param);
-
     SPI.transfer(crc);
 
     // Wait for response
@@ -103,7 +99,7 @@ byte SDCore::command(byte command, unsigned long param, byte crc) {
     }
 
     SPI.endTransaction();
-    digitalWrite(pin, HIGH);
+    digitalWrite(SD_SS_PIN, HIGH);
 
     return r;
 }
