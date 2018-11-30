@@ -2,7 +2,8 @@
 
 SDCore::SDCore(byte cs) {
     pin = cs;
-    settings = SPISettings(350000, MSBFIRST, SPI_MODE0);
+    low_speed = SPISettings(350000, MSBFIRST, SPI_MODE0);
+    high_speed = SPISettings(20000000, MSBFIRST, SPI_MODE0);
 }
 
 byte SDCore::begin() {
@@ -14,7 +15,7 @@ byte SDCore::begin() {
     digitalWrite(pin, HIGH);
 
     // Wait for SD stabilization
-    SPI.beginTransaction(settings);
+    SPI.beginTransaction(low_speed);
     for (byte i = 10; i--;)
         SPI.transfer(0xFF);
     SPI.endTransaction();
@@ -63,7 +64,7 @@ byte SDCore::command(byte command, unsigned long param, byte crc) {
     byte r = 0xFF;
 
     digitalWrite(pin, LOW);
-    SPI.beginTransaction(settings);
+    SPI.beginTransaction(low_speed);
 
     // Wait until device is ready
     for(byte i = 255; i--;)

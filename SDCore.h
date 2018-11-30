@@ -10,7 +10,8 @@ class SDCore {
         byte begin();
     private:
         byte pin;
-        SPISettings settings;
+        SPISettings low_speed;
+        SPISettings high_speed;
         byte command(byte command, unsigned long param, byte crc);
 };
 
