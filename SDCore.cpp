@@ -1,9 +1,5 @@
 #include "SDCore.h"
 
-// TODO:
-// -> Add full static CRC definition
-// -> Return a array with result
-
 bool SDCore::begin() {
     // Setup SPI
     SPI.begin();
@@ -59,11 +55,10 @@ bool SDCore::begin() {
     init_complete:
 
     // Send CMD16 (Set sector length)
-    if (SDCore::command(0x50, 512, 0xFF)) {
+    if (SDCore::command(CMD16, 512, 0xFF)) // TODO: Calculate CRC
         return false;
-    } // TODO: Calculate CRC
 
-    return !SDCore::command(0x7B, 0, 0xFF); // TODO: Calculate CRC
+    return !SDCore::command(CMD59, 0, 0xFF); // TODO: Calculate CRC
 }
 
 
@@ -90,8 +85,7 @@ byte SDCore::command(byte command, unsigned long param, byte crc) {
 
     // Wait for response
     for (byte i = 0xFF; i--;) {
-        r = SPI.transfer(0xFF);
-        if (r != 0xFF) {
+        if ((r = SPI.transfer(0xFF)) != 0xFF) {
             break;
         }
     }

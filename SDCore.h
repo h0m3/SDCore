@@ -10,9 +10,14 @@
 #endif
 
 // SD Card SS Pin
-// TODO: Check for correct MCU pin
 #ifndef SD_SS_PIN
-#define SD_SS_PIN 10
+    #if defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega16U4__) // Arduino Leonardo
+        #define SD_SS_PIN 8
+    #elif defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) // Arduino MEGA
+        #define SD_SS_PIN 19
+    #else // Arduino UNO and others
+        #define SD_SS_PIN 10
+    #endif
 #endif
 
 // SD Commands Definition
@@ -34,6 +39,7 @@
 #define CMD59 0x7B
 
 // SD Commands CRC
+// TODO: Complete CRC list
 #define CRC0 0x95
 #define CRC1 0xF9
 #define CRC8 0x87
