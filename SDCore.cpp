@@ -27,36 +27,28 @@ byte SDCore::begin() {
 
     // TODO: Add support to Ver 1.x cards
     // Send CMD8 (Check for voltage incompatible)
-    r = SDCore::command(0x48, 0x1AA, 0x87);
-
-    // Serial.print("CMD8 Status: ");
-    // Serial.println(r, HEX);
-
-    if (r != 0x01)
+    if ((r = SDCore::command(0x48, 0x1AA, 0x87)) != 0x01)
         return r;
 
     // Send ACMD41 (Initialize newer cards)
     for (byte i = 255; i--;) {
-        SDCore::command(0x77, 0, 0x65); // CMD55
-        r = SDCore::command(0x69, 0x4000000, 0x77); // CMD41
-        if (!r)
+        SDCore::command(0x77, 0, 0x65);
+        if (!(r = SDCore::command(0x69, 0x4000000, 0x77)))
             return r;
         delay(1);
     }
 
     // Send Alternative ACMD41 (older cards)
     for (byte i = 255; i--;) {
-        SDCore::command(0x77, 0, 0x65); // CMD55
-        r = SDCore::command(0x69, 0, 0xE5); // CMD41
-        if (!r)
+        SDCore::command(0x77, 0, 0x65);
+        if (!(r = SDCore::command(0x69, 0, 0xE5)))
             return r;
         delay(1);
     }
 
     // Send CMD1 (older cards)
     for (byte i = 255; i--;) {
-        r = SDCore::command(0x41, 0, 0xF9); // CMD1
-        if (!r) {
+        if (!(r = SDCore::command(0x41, 0, 0xF9))) {
             return r;
         }
         delay(1);
