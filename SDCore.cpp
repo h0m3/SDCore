@@ -32,33 +32,31 @@ bool SDCore::begin() {
         return false;
 
     // Send ACMD41 (Initialize newer cards)
-    byte i = 255;
-    do {
-        if (!i)
-            return false;
-        i--;
-        delay(1);
+    for (byte i = 255; i--;) {
         SDCore::command(CMD55, 0, CRC55);
-    } while (SDCore::command(CMD41, 0x4000000, 0x77));
+        if (!SDCore::command(CMD41, 0x4000000, 0x77))
+            goto init_complete;
+        delay(1);
+    }
 
     // Send Alternative ACMD41 (older cards)
-    i = 255;
-    do {
-        if (!i)
-            return false;
-        i--;
-        delay(1);
+    for (byte i = 255; i--;) {
         SDCore::command(CMD55, 0, CRC55);
-    } while (SDCore::command(CMD41, 0, 0xE5));
+        if (!SDCore::command(CMD41, 0, 0xE5))
+            goto init_complete;
+    }
 
     // Send CMD1 (older cards)
-    i = 255;
-    do {
-        if (!i)
-            return false;
-        i--;
+    for (byte i = 255; i--;) {
+        if (!(SDCore::command(CMD1, 0, CRC1))) {
+            goto init_complete;
+        }
         delay(1);
-    } while (SDCore::command(0x41, 0, 0xF9));
+    }
+
+    return false;
+
+    init_complete:
 
     // Send CMD16 (Set sector length)
     if (SDCore::command(0x50, 512, 0xFF)) {
