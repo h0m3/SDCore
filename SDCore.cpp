@@ -7,6 +7,8 @@ SDCore::SDCore(byte pin) {
 
 
 bool SDCore::begin(byte pin) {
+    byte r;
+
     // Initialize SPI
     SPI.beginTransaction(
         SPISettings(
@@ -20,32 +22,55 @@ bool SDCore::begin(byte pin) {
     digitalWrite(_pin, HIGH);
     for (i = 10; i--;)
         SPI.transfer(0xFF);
+    digitalWrite(_pin, LOW);
 
     // Send CMD0 (software reset)
-    byte r = SDCore::command(0x40, 0, 0x95);
+    for (byte i = 255; i--;) {
+        r = SDCore::command(0x40, 0, 0x95);
+        if (r == 0x01)
+            break;
+    }
+
+    // TODO: Add support to Ver 1.x cards
+    // Send CMD8 (Check for voltage incompatible)
+    r = SDCore::command(0x48, 0x000001AA, 0x87);
     if (r != 0x01)
         return r;
 
-    // Send CMD8 (Check condition 0x000001AA)
-    r = SDCore::command(0x48, 0x000001AA, 0x87);
-
-    // Check for voltage incompatible cards
-    if (r != 01 || SPI.transfer(0xFF) != 0x00) {
-        // TODO: Add support to Ver 1.x cards
+    // Send ACMD41 (Initialize newer cards)
+    for (byte i = 255; i--;) {
+        SDCore::command(0x77, 0, 0x65); // CMD55
+        r = SDCore::command(0x69, 0x4000000, 0x77); // CMD41
+        if (!r)
+            return r;
+        delay(1);
     }
-    // if ( r != 0x01 || SPI.transfer(0xFF) != 0x00)
-    //     return r;
-    // SPI.transfer(0xFF);
-    // SPI.transfer(0xFF);
-    // SPI.transfer(0xFF);
 
+    // Send Alternative ACMD41 (older cards)
+    for (byte i = 255; i--;) {
+        SDCore::command(0x77, 0, 0x65); // CMD55
+        r = SDCore::command(0x69, 0, 0xE5);
+        if (!r)
+            return r;
+        delay(1);
+    }
 
+    // Send CMD1 (older cards)
+    for (byte i = 255; i--) {
+        r = SDCore::command(0x41, 0, 0xF9);
+        if (!r) {
+            return r;
+        }
+        delay(1);
+    }
+
+    // Return failed code
+    return r;
 }
 
 
 byte SDCore::command(byte command, unsigned long param, byte crc) {
     byte r = 0xFF;
-    digitalWrite(_pin, LOW);
 
     // Send command
     SPI.transfer(command);
