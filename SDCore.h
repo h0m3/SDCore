@@ -6,10 +6,11 @@
 
 class SDCore {
     public:
-        SDCore(byte pin);
-        byte begin(byte pin)
+        SDCore(byte cs);
+        byte begin();
     private:
-        byte _pin;
+        byte pin;
+        SPISettings settings;
         byte command(byte command, unsigned long param, byte crc);
 };
 

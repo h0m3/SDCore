@@ -1,39 +1,37 @@
 #include "SDCore.h"
 
-SDCore::SDCore(byte pin) {
-    pinMode(pin, OUTPUT);
-    _pin = pin;
+SDCore::SDCore(byte cs) {
+    pin = cs;
+    settings = SPISettings(350000, MSBFIRST, SPI_MODE0);
 }
 
-
-bool SDCore::begin(byte pin) {
+byte SDCore::begin() {
     byte r;
 
-    // Initialize SPI
-    SPI.beginTransaction(
-        SPISettings(
-            400000, // 400 KHz
-            MSBFIRST,
-            SPI_MODE0
-        )
-    );
+    // Setup SPI
+    SPI.begin();
+    pinMode(pin, OUTPUT);
+    digitalWrite(pin, HIGH);
 
-    // Wait for power stabilization
-    digitalWrite(_pin, HIGH);
-    for (i = 10; i--;)
+    // Wait for SD stabilization
+    SPI.beginTransaction(settings);
+    for (byte i = 10; i--;)
         SPI.transfer(0xFF);
-    digitalWrite(_pin, LOW);
+    SPI.endTransaction();
 
     // Send CMD0 (software reset)
     for (byte i = 255; i--;) {
-        r = SDCore::command(0x40, 0, 0x95);
-        if (r == 0x01)
+        if (SDCore::command(0x40, 0, 0x95) == 0x01)
             break;
     }
 
     // TODO: Add support to Ver 1.x cards
     // Send CMD8 (Check for voltage incompatible)
-    r = SDCore::command(0x48, 0x000001AA, 0x87);
+    r = SDCore::command(0x48, 0x1AA, 0x87);
+
+    // Serial.print("CMD8 Status: ");
+    // Serial.println(r, HEX);
+
     if (r != 0x01)
         return r;
 
@@ -49,15 +47,15 @@ bool SDCore::begin(byte pin) {
     // Send Alternative ACMD41 (older cards)
     for (byte i = 255; i--;) {
         SDCore::command(0x77, 0, 0x65); // CMD55
-        r = SDCore::command(0x69, 0, 0xE5);
+        r = SDCore::command(0x69, 0, 0xE5); // CMD41
         if (!r)
             return r;
         delay(1);
     }
 
     // Send CMD1 (older cards)
-    for (byte i = 255; i--) {
-        r = SDCore::command(0x41, 0, 0xF9);
+    for (byte i = 255; i--;) {
+        r = SDCore::command(0x41, 0, 0xF9); // CMD1
         if (!r) {
             return r;
         }
@@ -72,20 +70,31 @@ bool SDCore::begin(byte pin) {
 byte SDCore::command(byte command, unsigned long param, byte crc) {
     byte r = 0xFF;
 
+    digitalWrite(pin, LOW);
+    SPI.beginTransaction(settings);
+
+    // Wait until device is ready
+    for(byte i = 255; i--;)
+        if (SPI.transfer(0xFF) == 0xFF)
+            break;
+
     // Send command
     SPI.transfer(command);
-    SPI.transfer(param >> 24);
-    SPI.transfer(param >> 16);
-    SPI.transfer(param >> 8);
-    SPI.transfer(param);
+    SPI.transfer16(param >> 16);
+    SPI.transfer16(param);
+
     SPI.transfer(crc);
 
     // Wait for response
-    for (byte i = 255; i--;) {
+    for (byte i = 0xFF; i--;) {
         r = SPI.transfer(0xFF);
-        if (r != 0xFF)
-            return r;
+        if (r != 0xFF) {
+            break;
+        }
     }
+
+    SPI.endTransaction();
+    digitalWrite(pin, HIGH);
 
     return r;
 }
