@@ -1,3 +1,8 @@
+/*
+  SDCore.cpp - SD Card Block Reading lightweight Library
+  Created by Artur 'h0m3' Paiva, December 1, 2018.
+  Released under LGPLv3 <https://www.gnu.org/licenses/lgpl-3.0.html>
+*/
 #include "SDCore.h"
 
 
@@ -11,7 +16,6 @@ SDCore::SDCore(byte ss) {
 // Download at: https://www.sdcard.org/downloads/pls/
 bool SDCore::begin() {
 
-    // Initialize SPI
     SPI.begin();
     pinMode(pin, OUTPUT);
     digitalWrite(pin, HIGH);

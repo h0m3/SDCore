@@ -1,3 +1,9 @@
+/*
+  SDCore.h - SD Card Block Reading lightweight Library
+  Created by Artur 'h0m3' Paiva, December 1, 2018.
+  Released under LGPLv3 <https://www.gnu.org/licenses/lgpl-3.0.html>
+*/
+
 #ifndef SDCORE_H
 #define SDCORE_H
 
