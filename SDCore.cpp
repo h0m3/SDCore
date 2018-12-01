@@ -3,15 +3,13 @@
 
 // Constructor
 SDCore::SDCore(byte ss) {
-    SDCore::begin(ss);
+    pin = ss;
 }
+
 
 // Based on SD Card Physical Layer Simplified Specification v6.00 Figure 7-2
 // Download at: https://www.sdcard.org/downloads/pls/
-bool SDCore::begin(byte ss) {
-
-    // Set attributes
-    pin = ss;
+bool SDCore::begin() {
 
     // Initialize SPI
     SPI.begin();
@@ -19,7 +17,7 @@ bool SDCore::begin(byte ss) {
     digitalWrite(pin, HIGH);
 
     // Wait for SD power stabilization
-    SPI.beginTransaction(low_speed);
+    SPI.beginTransaction(settings);
     for (byte i = 10; i--;)
         SPI.transfer(0xFF);
     SPI.endTransaction();
@@ -34,7 +32,7 @@ bool SDCore::begin(byte ss) {
 
     // Get OCR
     digitalWrite(pin, LOW);
-    SPI.beginTransaction(low_speed);
+    SPI.beginTransaction(settings);
 
     for(byte i = 255; i--;)
         if (SPI.transfer(0xFF) == 0xFF)
@@ -87,44 +85,101 @@ bool SDCore::begin(byte ss) {
 
 void SDCore::end() {
     SPI.transfer(0xFF); // Provide 8 clock cycles
-    // TODO: Correctly shut down SD Card
+
+    for (byte i = 255; i--;)
+        if (SDCore::command(CMD0, 0, CRC0) == 0x01) break;
+
     SPI.endTransaction();
     SPI.end();
     digitalWrite(pin, HIGH);
 }
 
-bool SDCore::read(unsigned long address, byte *buffer) {
-    byte r;
 
+bool SDCore::read(unsigned long address, byte *buffer) {
     if (low_capacity) {
         address <<= 9;
     }
 
     // Run command to get a block of data
+    for (byte i = 255; SDCore::command(CMD17, address, 0xFF); i--)
+        if (i == 0)
+            return false;
+
+    // Wait for data token
+    SPI.beginTransaction(settings);
     digitalWrite(pin, LOW);
-    SPI.beginTransaction(high_speed);
 
-    for(byte i = 255; i--;)
-        if ((r = SPI.transfer(0xFF)) == 0xFF)
-            break;
+    for(byte i = 255; SPI.transfer(0xFF) != 0xFE; i--) {
+        if (i == 0) {
+            SPI.endTransaction();
+            digitalWrite(pin, HIGH);
+            return false;
+        }
+    }
 
-    SPI.transfer(CMD17);
-    SPI.transfer(address >> 16);
-    SPI.transfer(address);
+    // Read all SD data
+    for (unsigned int i = 0; i < 512; i++) {
+        buffer[i] = SPI.transfer(0xFF);
+    }
+
+    // CRC
+    SPI.transfer(0xFF);
     SPI.transfer(0xFF);
 
+    SPI.endTransaction();
+    digitalWrite(pin, HIGH);
 
-    // for (unsigned int i = 0; i < 512; i++) {
-    //     buffer[i] =
-    // }
+    return true;
 }
+
+
+bool SDCore::write(unsigned long address, byte *buffer) {
+    if (low_capacity) {
+        address <<= 9;
+    }
+
+    // Run command to write a block of data
+    for (byte i = 255; SDCore::command(CMD24, address, 0xFF); i--)
+        if (i == 0) {
+            SDCore::command(CMD12, 0, 0xFF); // TODO: Get CRC
+            return false;
+        }
+
+    // Send data token
+    SPI.beginTransaction(settings);
+    digitalWrite(pin, LOW);
+
+    SPI.transfer(0xFE);
+
+    // Write all SD data
+    for (unsigned int i = 0; i < 512; i++)
+        SPI.transfer(buffer[i]);
+
+    // CRC
+    SPI.transfer(0xFF);
+    SPI.transfer(0xFF);
+
+    // SD return status
+    for (byte i = 255; (SPI.transfer(0xFF) & 0x1F) != 0x05; i--)
+        if (i == 0) {
+            SPI.endTransaction();
+            digitalWrite(pin, HIGH);
+            return false;
+        }
+
+    SPI.endTransaction();
+    digitalWrite(pin, HIGH);
+
+    return true;
+}
+
 
 byte SDCore::command(byte command, unsigned long param, byte crc) {
     byte r;
 
     // Initialize SPI communication
     digitalWrite(pin, LOW);
-    SPI.beginTransaction(low_speed);
+    SPI.beginTransaction(settings);
 
     // Wait for idle status
     for(byte i = 255; i--;)

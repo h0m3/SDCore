@@ -6,14 +6,7 @@
 
 // SD Card Speed
 #ifndef SD_SPEED
-    #define SD_SPEED 20000000 // 20 MHz
-#endif
-
-// SD Card Slow Speed
-#ifndef SD_COMPAT
-    #define SD_SLOW_SPEED 250000 // 250 KHz
-#else
-    #define SD_SLOW_SPEED 400000 // 400 KHz
+    #define SD_SPEED 400000 // 400 KHz
 #endif
 
 // SD Commands Definition
@@ -45,15 +38,14 @@
 class SDCore {
     public:
         SDCore(byte ss);
-        bool begin(byte ss);
+        bool begin();
         void end();
         bool read(unsigned long address, byte *buffer);
         bool write(unsigned long address, byte *buffer);
     private:
         byte pin;
         bool low_capacity;
-        const SPISettings high_speed = SPISettings(SD_SPEED, MSBFIRST, SPI_MODE0);
-        const SPISettings low_speed = SPISettings(SD_SLOW_SPEED, MSBFIRST, SPI_MODE0);
+        const SPISettings settings = SPISettings(SD_SPEED, MSBFIRST, SPI_MODE0);
         byte command(byte command, unsigned long param, byte crc);
 };
 
