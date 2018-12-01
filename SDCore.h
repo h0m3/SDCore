@@ -6,18 +6,14 @@
 
 // SD Card Speed
 #ifndef SD_SPEED
-#define SD_SPEED 20000000
+    #define SD_SPEED 20000000 // 20 MHz
 #endif
 
-// SD Card SS Pin
-#ifndef SD_SS_PIN
-    #if defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega16U4__) // Arduino Leonardo
-        #define SD_SS_PIN 8
-    #elif defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) // Arduino MEGA
-        #define SD_SS_PIN 19
-    #else // Arduino UNO and others
-        #define SD_SS_PIN 10
-    #endif
+// SD Card Slow Speed
+#ifndef SD_COMPAT
+    #define SD_SLOW_SPEED 250000 // 250 KHz
+#else
+    #define SD_SLOW_SPEED 400000 // 400 KHz
 #endif
 
 // SD Commands Definition
@@ -42,14 +38,23 @@
 // TODO: Complete CRC list
 #define CRC0 0x95
 #define CRC1 0xF9
-#define CRC8 0x87
 #define CRC55 0x65
+#define CRC58 0x95
+
 
 class SDCore {
     public:
-        static bool begin();
+        SDCore(byte ss);
+        bool begin(byte ss);
+        void end();
+        bool read(unsigned long address, byte *buffer);
+        bool write(unsigned long address, byte *buffer);
     private:
-        static byte command(byte command, unsigned long param, byte crc);
+        byte pin;
+        bool low_capacity;
+        const SPISettings high_speed = SPISettings(SD_SPEED, MSBFIRST, SPI_MODE0);
+        const SPISettings low_speed = SPISettings(SD_SLOW_SPEED, MSBFIRST, SPI_MODE0);
+        byte command(byte command, unsigned long param, byte crc);
 };
 
 #endif
