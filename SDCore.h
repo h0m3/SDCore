@@ -8,12 +8,6 @@
 #define SDCORE_H
 
 #include "Arduino.h"
-#include <SPI.h>
-
-// SD Card Speed
-#ifndef SD_SPEED
-    #define SD_SPEED 400000 // 400 KHz
-#endif
 
 // SD Commands Definition
 #define CMD0 0x40
@@ -43,16 +37,13 @@
 
 class SDCore {
     public:
-        SDCore(byte ss);
-        bool begin();
-        void end();
-        bool read(unsigned long address, byte *buffer);
-        bool write(unsigned long address, byte *buffer);
+        static bool begin();
+        static void end();
+        static bool read(unsigned long address, byte *buffer);
+        static bool write(unsigned long address, byte *buffer);
     private:
-        byte pin;
-        bool low_capacity;
-        const SPISettings settings = SPISettings(SD_SPEED, MSBFIRST, SPI_MODE0);
-        byte command(byte command, unsigned long param, byte crc);
+        static bool low_capacity;
+        static byte command(byte command, unsigned long param, byte crc);
 };
 
 #endif

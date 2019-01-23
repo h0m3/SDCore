@@ -16,9 +16,9 @@ It also has some examples ready to use
 
 ### Its really ~~REALLY~~ lightweight
 
-The full AVR binary (program space) is less than 2KB, including all dependencies and the Arduino bootloader. So you're left with 30KB free on a regular Arduino Uno.
+The full AVR binary (program space) is less than 1.2KB, including all dependencies and the Arduino bootloader. So you're left with 30KB+ free on a regular Arduino Uno.
 
-The data memory is also reduced, this library will use less than 50 bytes of data memory, that includes stack allocations. **Does not include the 512 bytes buffer**.
+The data memory is also reduced, this library will uses 10 bytes of data memory, that includes stack allocations. **Does not include the 512 bytes buffer**.
 
 ### It behaves like a regular library
 
@@ -28,10 +28,6 @@ use. It also comes with Examples.
 ### Its fast
 
 I avoid at extreme do unecessary allocations, calls and jumps. So it works at close the speed of the SPI. Also since its under 2K the compiler can optimize to use AVR short jumps.
-
-### Use modern SPI standards
-
-This library use the native SPI library from Arduino, but it does using the modern calls and standards right from the documentation. So it does not block your SPI or do messy stuff, you can also ~~untested~~ run several sd cards or any other device from the SPI at the same time.
 
 ### Support different cards
 
@@ -53,6 +49,30 @@ Instead of creating and dumping you with a 512 bytes buffer and you having no wa
 
 No complex stuff, initialize the SD Card with one command and start to write and reading from it with only another command each.
 
+### Work with most common boards
+
+Since most AVR Micrcontrollers share most SPI settings, its possible to support most common AVR microcontrollers. Bellow is a list of supported AVR Microcontrollers.
+
+Microcontroller | Slave Select Pin | Tested
+-|-|-
+Mega 1280 | PB0 (Pin 53) | No
+Mega 2650 | PB0 (Pin 53) | No
+Mega 32U4 | PB0 (Pin 53) | No
+Mega 644 | PB4 (Pin 4) | No
+Mega 1284 | PB4 (Pin 4) | No
+Mega 32 | PB4 (Pin 4) | No
+Mega 16 | PB4 (Pin 4) | No
+Tiny 2313 | PB4 (Pin 13) | No
+Tiny 4313 | PB4 (Pin 13) | No
+Tiny 25 | PB3 (Pin 3) | No
+Tiny 45 | PB3 (Pin 3) | No
+Tiny 85 | PB3 (Pin 3) | No
+Mega 168 | PB2 (Pin 10) | No
+Mega 328 | PB2 (Pin 10) | No
+Mega 8 | PB2 (Pin 10) | No
+
+Since SDCore uses only Hardware SPI, the pins are default from microcontroller.
+
 # Methods list
 
 This is a list of methods available in SDCore class
@@ -71,31 +91,27 @@ This is a simple template / example to use with SDCore
 ```arduino
 #include <SDCore.h>
 
-// Create SD object binded by SS pin
-// Theres no need to insert any SD card here
-SDCore sd(10);
+void setup() {
+  // Create an empty buffer to manipulate blocks
+  byte buffer[512] = { 0x00 };
 
-// Create an empty buffer to manipulate blocks
-byte buffer[512] = { 0x00 };
+  // Initialize SD Card
+  SDCore::begin();
 
-// Initialize SD Card
-sd.begin();
+  // Read block 0 from SD
+  SDCore::read(0, buffer);
 
-// Read block 0 from SD
-sd.read(0, buffer);
+  // Write block 0 into SD
+  SDCore::write(0, buffer);
 
-// Write block 0 into SD
-sd.write(0, buffer);
+  // Close connection with SD
+  SDCore::end();
+}
 
-// Close connection with SD
-sd.end();
+void loop() {};
 ```
 
 # TODO List
-
-### Find stable speed
-
-Now SDCore runs at 400 KHz because of unstable communication with older SD Cards and noisy SPI, find a way to increate SPI communication speed.
 
 ### Check for deconstructor in C++
 
@@ -112,6 +128,14 @@ All examples are related to reading information from SD Card, add a example wich
 ### Complete CRC list
 
 All necessary static CRC-7 are present, but it will make me more confortable if all possible static CRC-7 where present, since this list is built at compile time and dont use AVR resources and some non-standard card may use them. ~~win-win~~
+
+### Test support for all boards
+
+Since most boards arent tested yet. I need to test most boards for bugs. Specially Tiny boards since they dont have enough memory.
+
+### Code Optimization and Cleanup
+
+I've removed Arduino SPI library in order to make this library smaller and faster, but i think theres some optimizations in order here.
 
 # License
 

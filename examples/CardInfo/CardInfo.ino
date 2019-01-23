@@ -26,15 +26,8 @@ void setup() {
     // Allow you to get the serial comm active
     delay(2000);
 
-    /*
-        Create the SD object
-        Change your pin to wharever is the Slave Select (SS)
-        pin on your board is, you can also use a custom SS.
-    */
-    SDCore sd(10);
-
     // Initialize SD Card
-    byte response = sd.begin();
+    byte response = SDCore::begin();
 
     if (!response) {
         Serial.println("SD Initialization: FAILED");
@@ -47,7 +40,7 @@ void setup() {
     byte buffer[512] = {0x00};
 
     // Read MBR
-    response = sd.read(0, buffer);
+    response = SDCore::read(0, buffer);
     if (!response) {
         Serial.println("MBR Reading: FAILED");
         return;
@@ -55,7 +48,7 @@ void setup() {
     Serial.println("MBR Reading: SUCESS");
 
     // Finish SD Card communication
-    sd.end();
+    SDCore::end();
 
     // Check if MBR is valid (MBR Signature: 0x55AA at end of the sector)
     if (buffer[0x1FE] != 0x55 || buffer[0x1FF] != 0xAA) {

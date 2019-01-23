@@ -25,15 +25,8 @@ void setup() {
     // Allow you to get the serial comm active
     delay(2000);
 
-    /*
-        Create the SD object
-        Change your pin to wharever is the Slave Select (SS)
-        pin on your board is, you can also use a custom SS.
-    */
-    SDCore sd(10);
-
     // Initialize SD Card
-    byte response = sd.begin();
+    byte response = SDCore::begin();
 
     if (!response) {
         Serial.println("SD Initialization: FAILED");
@@ -50,7 +43,7 @@ void setup() {
 
         // Check if the block is read correctly
         // And jump it if necessary
-        if (!sd.read(i, buffer))
+        if (!SDCore::read(i, buffer))
             continue;
 
         // Print the block content
@@ -70,7 +63,7 @@ void setup() {
     }
 
     // End SD Card communication
-    sd.end();
+    SDCore::end();
 }
 
 void loop() {}
