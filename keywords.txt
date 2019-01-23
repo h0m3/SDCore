@@ -3,6 +3,11 @@
 #######################################
 
 #######################################
+# Classes (KEYWORD1)
+#######################################
+SDCore  KEYWORD1
+
+#######################################
 # Methods and Functions (KEYWORD2)
 #######################################
 begin   KEYWORD2
@@ -13,4 +18,5 @@ write	KEYWORD2
 ######################################
 # Constants (LITERAL1)
 #######################################
-D_SPEED LITERAL1
+SDCORE_CUSTOM_DDRB LITERAL1
+SDCORE_CUSTOM_SS   LITERAL1

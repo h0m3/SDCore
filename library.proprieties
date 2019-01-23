@@ -1,8 +1,8 @@
 name=SDCore
-version=0.2.0
+version=0.2.1
 author=Artur 'h0m3' Paiva, dr.hoome@gmail.com
 maintainer=Artur 'h0m3' Paiva, dr.hoome@gmail.com
-sentence=SD Block Reading Lightweight Library
+sentence=SD Card Block Lightweight Library
 category=Data Storage
 url=https://github.com/h0m3/SDCore
 architectures=*

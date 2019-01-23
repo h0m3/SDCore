@@ -92,7 +92,7 @@ To set your own SPI parameters you just need to use the follow constants:
 
 > You need to set both SDCORE_CUSTOM_SS and SDCORE_CUSTOM_DDRB to work, setting only one will have no effect
 
-> This mode **may** be a couple of cycles slow, this is heavly depedent on your compilator optimizations
+> This mode **may** be a couple of cycles slow, this is heavly depedent on your compiler optimizations
 
 # Methods list
 
