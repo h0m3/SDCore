@@ -7,6 +7,8 @@
 
 bool SDCore::low_capacity = false;
 
+#define SPI_SEND(data) {SPDR = data; while (!(SPSR & 0x80));}
+
 // Based on SD Card Physical Layer Simplified Specification v6.00 Figure 7-2
 // Download at: https://www.sdcard.org/downloads/pls/
 bool SDCore::begin() {
@@ -14,8 +16,16 @@ bool SDCore::begin() {
     // Set SPI pinout
     // MISO Input / MOSI, SCK and SS output
 
+    // Custom SPI board
+    #if defined(SDCORE_CUSTOM_DDRB) && defined(SDCORE_CUSTOM_SS)
+
+        DDRB = SDCORE_CUSTOM_DDRB;
+
+        #define SS_HIGH() {PORTB |= 1 << SDCORE_CUSTOM_SS;}
+        #define SS_LOW() {PORTB &= ~(1 << SDCORE_CUSTOM_SS);}
+
     // Mega 1280 / Mega 2560 / Mega 32U4
-    #if defined(__AVR_ATmega1280__) || \
+    #elif defined(__AVR_ATmega1280__) || \
         defined(__AVR_ATmega2560__) || \
         defined(__AVR_ATmega32U4__)
 
@@ -66,11 +76,9 @@ bool SDCore::begin() {
     SPCR = 0x52; // ~ 300KHz, MSBFIRST, MODE0
     SS_HIGH();
 
-
     // Wait for SD power stabilization
     for (byte i = 10; --i;) {
-        SPDR = 0xFF;
-        while (!(SPSR & 0x80));
+        SPI_SEND(0xFF);
     }
 
     // Send SD Reset
@@ -93,12 +101,10 @@ bool SDCore::begin() {
 
     SS_LOW();
 
-    SPDR = 0xFF;
-    while (!(SPSR & 0x80));
+    SPI_SEND(0xFF);
     SDCore::low_capacity = !(SPDR && 0x40);
 
-    SPDR = 0xFF;
-    while (!(SPSR & 0x80));
+    SPI_SEND(0xFF);
     if (!(SPDR & 0x78)) {
         return false;
     }
@@ -141,8 +147,7 @@ bool SDCore::begin() {
 
 void SDCore::end() {
     // Provide 8 clock cycles
-    SPDR = 0xFF;
-    while (!(SPSR & 0x80));
+    SPI_SEND(0xFF);
 
     for (byte i = 255; --i;) {
         if (SDCore::command(CMD0, 0, CRC0) == 0x01) {
@@ -151,6 +156,7 @@ void SDCore::end() {
     }
 
     SS_HIGH();
+    SPCR = 0;
 }
 
 
@@ -173,23 +179,19 @@ bool SDCore::read(unsigned long address, byte *buffer) {
         if (i == 0) {
             SS_HIGH();
             return false;
-            SPDR = 0xFF;
-            while (!(SPSR & 0x80));
         }
+        SPI_SEND(0xFF);
     }
 
     // Read all SD data
     for (unsigned int i = 0; i < 512; i++) {
-        SPDR = 0xFF;
-        while (!(SPSR & 0x80));
+        SPI_SEND(0xFF);
         buffer[i] = SPDR;
     }
 
     // CRC
-    SPDR = 0xFF;
-    while (!(SPSR & 0x80));
-    SPDR = 0xFF;
-    while (!(SPSR & 0x80));
+    SPI_SEND(0xFF);
+    SPI_SEND(0xFF);
 
     SS_HIGH();
     return true;
@@ -211,21 +213,16 @@ bool SDCore::write(unsigned long address, byte *buffer) {
 
     // Send data token
     SS_LOW();
-    SPDR = 0xFE;
-    while (!(SPSR & 0x80));
+    SPI_SEND(0xFE);
 
     // Write all SD data
     for (unsigned int i = 0; i < 512; i++) {
-        SPDR = buffer[i];
-        while (!(SPSR & 0x80));
+        SPI_SEND(buffer[i]);
     }
 
     // CRC
-    SPDR = 0xFF;
-    while (!(SPSR & 0x80));
-    SPDR = 0xFF;
-    while (!(SPSR & 0x80));
-
+    SPI_SEND(0xFF);
+    SPI_SEND(0xFF);
 
     // SD return status
     for (byte i = 255; (SPDR & 0x1F) != 0x05; --i) {
@@ -233,8 +230,7 @@ bool SDCore::write(unsigned long address, byte *buffer) {
             SS_HIGH();
             return false;
         }
-        SPDR = 0xFF;
-        while (!(SPSR & 0x80));
+        SPI_SEND(0xFF);
     }
 
     SS_HIGH();
@@ -243,51 +239,34 @@ bool SDCore::write(unsigned long address, byte *buffer) {
 
 
 byte SDCore::command(byte command, unsigned long param, byte crc) {
-    byte r;
-
     // Initialize SPI communication
     SS_LOW();
 
     // Wait for idle status
     for(byte i = 255; i--;) {
+        SPI_SEND(0xFF);
         if (SPDR == 0xFF) {
             break;
         }
-        SPDR = 0xFF;
-        while (!(SPSR & 0x80));
     }
 
     // Send command
-    SPDR = command;
-    while (!(SPSR & 0x80));
-
-    SPDR = param >> 24;
-    while (!(SPSR & 0x80));
-
-    SPDR = param >> 16;
-    while (!(SPSR & 0x80));
-
-    SPDR = param >> 8;
-    while (!(SPSR & 0x80));
-
-    SPDR = param;
-    while (!(SPSR & 0x80));
-
-    SPDR = crc;
-    while (!(SPSR & 0x80));
+    SPI_SEND(command);
+    SPI_SEND(param >> 24);
+    SPI_SEND(param >> 16);
+    SPI_SEND(param >> 8);
+    SPI_SEND(param);
+    SPI_SEND(crc);
 
     // Wait for response
     for (byte i = 255; --i;) {
-        if (r != 0xFF) {
-            break;
+        SPI_SEND(0xFF);
+        if (SPDR != 0xFF) {
+            SS_HIGH();
+            return SPDR;
         }
-
-        SPSR = 0xFF;
-        while (!(SPSR & 0x80));
-        r = SPSR;
     }
 
-    // End SPI communication
     SS_HIGH();
-    return r;
+    return 0xFF;
 }

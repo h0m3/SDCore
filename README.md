@@ -1,6 +1,6 @@
 # SDCore
 
-This library is a lightweight and simple way to access SD Card blocks reading on Arduino
+This library is a lightweight and simple way to access SD Card blocks on Arduino
 
 I didnt find any simple and updated library to do that on Arduino, so i built my own
 
@@ -16,14 +16,13 @@ It also has some examples ready to use
 
 ### Its really ~~REALLY~~ lightweight
 
-The full AVR binary (program space) is less than 1.2KB, including all dependencies and the Arduino bootloader. So you're left with 30KB+ free on a regular Arduino Uno.
+The full AVR binary (program space) is less than 1.2KB, including all dependencies and the Arduino bootloader. So you're left with almost 31KB free on a regular Arduino Uno.
 
 The data memory is also reduced, this library will uses 10 bytes of data memory, that includes stack allocations. **Does not include the 512 bytes buffer**.
 
 ### It behaves like a regular library
 
-It works like any other Arduino 1.5+ library. So its ready to install and
-use. It also comes with Examples.
+It works like any other Arduino 1.5+ library. So its ready to install and use. It also comes with Examples.
 
 ### Its fast
 
@@ -37,7 +36,7 @@ With that SDCore is able to use both SD and SDHC and also several standard sdcar
 
 > Note that SDXC are untested and may not work. They should work since they use the same standard as SDHC but who knows.
 
-### All checkings in place
+### All checks in place
 
 If a SD Card is not supported or its malfunctioning, the SD standard will prevent it from being used. And all checkings are there. So only compatible SD Cards will work. That include like 99% of the market SD Cards.
 
@@ -47,7 +46,7 @@ Instead of creating and dumping you with a 512 bytes buffer and you having no wa
 
 ### Its really simple to use
 
-No complex stuff, initialize the SD Card with one command and start to write and reading from it with only another command each.
+No complex stuff, initialize the SD Card with one command and start to write and reading from it with only another command.
 
 ### Work with most common boards
 
@@ -68,10 +67,32 @@ Tiny 25 | PB3 (Pin 3) | No
 Tiny 45 | PB3 (Pin 3) | No
 Tiny 85 | PB3 (Pin 3) | No
 Mega 168 | PB2 (Pin 10) | No
-Mega 328 | PB2 (Pin 10) | No
+Mega 328 | PB2 (Pin 10) | Yes
 Mega 8 | PB2 (Pin 10) | No
 
-Since SDCore uses only Hardware SPI, the pins are default from microcontroller.
+> Since SDCore use only Hardware SPI, the pins are default for the MCU
+
+### Custom controllers
+
+You can setup your own different AVR microcontroller, it should only follow the AVR standard of using SPI at port B
+
+To set your own SPI parameters you just need to use the follow constants:
+
+```arduino
+// This example define a custom board for Arduino UNO / Atmega 328
+
+// Mask for DDRB, where 1 is output and 0 is input
+// This will set MISO, MOSI, SCK and SS directions
+#define SDCORE_CUSTOM_DDRB 0x2C
+
+// This is the pin for Slave Select
+// This is not the Arduino pin, this is the PORTB pin (or bit)
+#define SDCORE_CUSTOM_SS 2
+```
+
+> You need to set both SDCORE_CUSTOM_SS and SDCORE_CUSTOM_DDRB to work, setting only one will have no effect
+
+> This mode **may** be a couple of cycles slow, this is heavly depedent on your compilator optimizations
 
 # Methods list
 
@@ -113,17 +134,13 @@ void loop() {};
 
 # TODO List
 
-### Check for deconstructor in C++
+### Code checkings
 
-Check if in any ocasion the SDCore object need to be freed from memory.
+Maybe some checkings, specialy related to DDRB are not made.
 
 ### Add SD Card information method
 
 Create a method to get information from SD Card such as size and if its a SDHC or not.
-
-### Add a `write` example
-
-All examples are related to reading information from SD Card, add a example wich writes it
 
 ### Complete CRC list
 
@@ -131,11 +148,11 @@ All necessary static CRC-7 are present, but it will make me more confortable if 
 
 ### Test support for all boards
 
-Since most boards arent tested yet. I need to test most boards for bugs. Specially Tiny boards since they dont have enough memory.
+Since most boards arent tested yet. I need to test most boards for bugs. Specially Tiny boards since they dont have enough data memory
 
 ### Code Optimization and Cleanup
 
-I've removed Arduino SPI library in order to make this library smaller and faster, but i think theres some optimizations in order here.
+I've removed Arduino SPI library in order to make this library smaller and faster, but i think theres some optimizations to do
 
 # License
 
