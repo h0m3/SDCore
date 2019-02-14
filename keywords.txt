@@ -5,18 +5,18 @@
 #######################################
 # Classes (KEYWORD1)
 #######################################
-SDCore  KEYWORD1
+SDCore	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
-begin   KEYWORD2
-end     KEYWORD2
+begin	KEYWORD2
+end	KEYWORD2
 read	KEYWORD2
 write	KEYWORD2
 
 ######################################
 # Constants (LITERAL1)
 #######################################
-SDCORE_CUSTOM_DDRB LITERAL1
-SDCORE_CUSTOM_SS   LITERAL1
+SDCORE_CUSTOM_DDRB	LITERAL1
+SDCORE_CUSTOM_SS	LITERAL1

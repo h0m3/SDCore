@@ -8,7 +8,7 @@ I didnt find any simple and updated library to do that on Arduino, so i built my
 
 Click on download as zip from GitHub and import as a regular library into your Arduino IDE.
 
-Then you can import the library by just adding the header `#import <SDCore.h>`
+Then you can include the library by just adding the header `#include <SDCore.h>`
 
 It also has some examples ready to use
 
