@@ -6,3 +6,4 @@ sentence=SD Card Block Lightweight Library
 category=Data Storage
 url=https://github.com/h0m3/SDCore
 architectures=*
+paragraph=SD Card Block Lightweight Library that aims to make SD Card blocks read easy and really lightweight
